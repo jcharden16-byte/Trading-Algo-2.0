@@ -1,0 +1,29 @@
+name: Stock Scanner
+
+on:
+  schedule:
+    # Every 15 min, Mon-Fri, 13:00-21:59 UTC — a buffer around US market hours
+    # (9:30am-4pm ET, which is 13:30-20:00 UTC or 14:30-21:00 UTC depending on
+    # daylight saving). The script's own market_is_open() check, backed by
+    # Alpaca's live clock, handles exact open/close and holidays.
+    - cron: "*/15 13-21 * * 1-5"
+  workflow_dispatch: {}       # adds a manual "Run workflow" button for testing
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests pandas lxml
+
+      - run: python stock_scanner.py
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
